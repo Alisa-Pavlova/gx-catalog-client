@@ -2,15 +2,12 @@ import { Button, Container, Table, Alert } from 'react-bootstrap'
 import { selectedCatalogs, fetchCatalogs, deleteCatalog } from '../store/reducers/catalogs'
 import { useDispatch, useSelector } from 'react-redux'
 import React, { useEffect, useState } from 'react'
-import api from '../utils/api'
 
 
 function Home() {
   const [error, setError] = useState('')
   const catalogs = useSelector(selectedCatalogs)
   const dispatch = useDispatch()
-
-  console.log(catalogs);
 
   useEffect(() => {
     if (!catalogs.length) {

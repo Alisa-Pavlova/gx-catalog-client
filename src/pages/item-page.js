@@ -11,19 +11,18 @@ function ItemPage() {
   const catalogs = useSelector(selectedCatalogs)
   const dispatch = useDispatch()
 
-
-
   useEffect(() => {
     if (!catalogs.length) {
       dispatch(fetchCatalogs())
     }
   }, [])
 
-
   return (
     <Container>
       <h1>Items</h1>
-      <Button variant="primary">Create Item</Button>
+      <a href={`/catalog/${id}/create`}>
+        <Button variant="primary">Create Item</Button>
+      </a>
 
       <br/><br/>
 

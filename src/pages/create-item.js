@@ -2,13 +2,15 @@ import { Button, Container, FormControl, Form, Alert } from 'react-bootstrap'
 import React, { createRef, useState } from 'react'
 import debounce from '../utils/debounce'
 import api from '../utils/api'
-import { useHistory } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
 
-function CreateCatalogPage() {
+function CreateItemPage() {
+  const { id } = useParams()
+
   const [error, setError] = useState('')
   const [isValidName, setIsValidName] = useState(false)
   const formRef = createRef()
-  const history = useHistory();
+  const history = useHistory()
 
   const checkName = async () => {
     const name = formRef.current?.name.value
@@ -18,10 +20,10 @@ function CreateCatalogPage() {
     }
 
     try {
-      const { data } = await api.get(`/api/v1/catalog/name/${name.trim()}`)
+      const { data } = await api.get(`/api/v1/item/name/${name.trim()}`)
       
       if (!!data) {
-        throw new Error(`Catalog ${name} is already exist`)
+        throw new Error(`Item ${name} is already exist`)
       }
 
       setIsValidName(true)
@@ -33,7 +35,11 @@ function CreateCatalogPage() {
 
   const onSubmit = async () => {
     const name = formRef.current.name.value
+    const brand = formRef.current.brand.value
+    const price = Number(formRef.current.price.value) || 0
+    const model = formRef.current.model.value
     const description = formRef.current.description.value
+
 
     if (!isValidName || !name.trim() ) {
       setError('Name is not valid')
@@ -42,12 +48,16 @@ function CreateCatalogPage() {
 
     const params = {
       name,
-      description
+      brand,
+      model,
+      price,
+      description,
+      catalog_id: id
     }
 
     try {
-      await api.post('/api/v1/catalog', params)
-      history.push('/')
+      await api.post('/api/v1/item', params)
+      history.push(`/catalog/${id}`)
     } catch (err) {
       setError(err.message)
     }
@@ -68,8 +78,8 @@ function CreateCatalogPage() {
         show={error}
         > {error} </Alert>
 
-      <h1>Create catalog</h1>
-     
+      <h1>Create item</h1>
+
       <br/><br/>
 
       <Form ref={formRef}>
@@ -83,9 +93,24 @@ function CreateCatalogPage() {
           <FormControl as="textarea" />
         </Form.Group>
         <br/>
+        <Form.Group name="price" controlId="price">
+          <Form.Label>Price</Form.Label>
+          <FormControl type="number" />
+        </Form.Group>
+        <br/>
+        <Form.Group name="model" controlId="model">
+          <Form.Label>Model</Form.Label>
+          <FormControl />
+        </Form.Group>
+        <br/>
+        <Form.Group name="brand" controlId="brand">
+          <Form.Label>Brand</Form.Label>
+          <FormControl />
+        </Form.Group>
+        <br/>
         
       </Form>
-        <a href='/'><Button variant="warning">Cancel</Button></a>
+        <a href={`/catalog/${id}`}><Button variant="warning">Cancel</Button></a>
         {' '}
         <Button disabled={error || !isValidName} onClick={onSubmit}>Create</Button> 
     
@@ -93,4 +118,4 @@ function CreateCatalogPage() {
   );
 }
 
-export default CreateCatalogPage;
+export default CreateItemPage
