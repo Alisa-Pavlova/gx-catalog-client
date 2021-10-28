@@ -1,20 +1,41 @@
-import { Button, Container, FormControl, Form, Alert } from 'react-bootstrap'
-import React, { createRef, useState } from 'react'
+import { Button, Container, Alert } from 'react-bootstrap'
+import React, { createRef, useState, useEffect } from 'react'
 import debounce from '../utils/debounce'
 import api from '../utils/api'
 import { useHistory, useParams } from 'react-router-dom'
+import ItemForm from '../components/item-form'
+import { selectedCatalog, fetchCatalog, updateValue } from '../store/reducers'
+import { useDispatch, useSelector } from 'react-redux'
 
-function CreateItemPage() {
-  const { id } = useParams()
+
+function UpdateItemPage () {
+  const { catalogId, id } = useParams()
   const [error, setError] = useState('')
-  const [isValidName, setIsValidName] = useState(false)
+  const [isValidName, setIsValidName] = useState(true)
   const formRef = createRef()
   const history = useHistory()
+  const dispatch = useDispatch()
+
+  const catalog = useSelector(selectedCatalog)
+  const items = catalog.items || []
+  const item = items.find(i => i.id === Number(id))
+  console.log(items);
+
+  useEffect(() => {
+    if (!catalog.name) {
+      dispatch(fetchCatalog(catalogId))
+    }
+  }, [])
 
   const checkName = async () => {
     const name = formRef.current?.name.value
 
     if (!name?.trim()) {
+      return
+    }
+
+    if (item?.name === name) {
+      setIsValidName(true)
       return
     }
 
@@ -39,7 +60,6 @@ function CreateItemPage() {
     const model = formRef.current.model.value
     const description = formRef.current.description.value
 
-
     if (!isValidName || !name.trim() ) {
       setError('Name is not valid')
       return
@@ -51,12 +71,13 @@ function CreateItemPage() {
       model,
       price,
       description,
-      catalog_id: id
+      catalog_id: catalogId
     }
 
     try {
-      await api.post('/api/v1/item', params)
-      history.push(`/catalog/${id}`)
+      const { data } = await api.put(`/api/v1/item/${id}`, params)
+      dispatch(updateValue(data, 'items'))
+      history.push(`/catalog/${catalogId}`)
     } catch (err) {
       setError(err.message)
     }
@@ -77,43 +98,17 @@ function CreateItemPage() {
         show={error}
         > {error} </Alert>
 
-      <h1>Create item</h1>
+        <h1>Update catalog</h1>
+      
+        <br/><br/>
 
-      <br/><br/>
-
-      <Form ref={formRef}>
-        <Form.Group name="name" controlId="name">
-          <Form.Label>Name</Form.Label>
-          <FormControl isValid={isValidName} onChange={handleChangeName} />
-        </Form.Group>
-        <br/>
-        <Form.Group name="description" controlId="description">
-          <Form.Label>Description</Form.Label>
-          <FormControl as="textarea" />
-        </Form.Group>
-        <br/>
-        <Form.Group name="price" controlId="price">
-          <Form.Label>Price</Form.Label>
-          <FormControl type="number" />
-        </Form.Group>
-        <br/>
-        <Form.Group name="model" controlId="model">
-          <Form.Label>Model</Form.Label>
-          <FormControl />
-        </Form.Group>
-        <br/>
-        <Form.Group name="brand" controlId="brand">
-          <Form.Label>Brand</Form.Label>
-          <FormControl />
-        </Form.Group>
-        <br/>
-      </Form>
-        <a href={`/catalog/${id}`}><Button variant="warning">Cancel</Button></a>
+        <ItemForm formRef={formRef} handleChangeName={handleChangeName} isValidName={isValidName} item={item} />
+        <a href={`/catalog/${catalogId}`}><Button variant="warning">Cancel</Button></a>
         {' '}
-        <Button disabled={error || !isValidName} onClick={onSubmit}>Create</Button> 
+        <Button disabled={error || !isValidName} onClick={onSubmit}>Update</Button> 
     
     </Container>
   );
 }
 
-export default CreateItemPage
+export default UpdateItemPage

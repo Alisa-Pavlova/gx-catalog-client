@@ -1,13 +1,14 @@
 import { Button, Container, Table, Alert } from 'react-bootstrap'
-import { selectedCatalogs, fetchCatalogs, deleteCatalog } from '../store/reducers/catalogs'
+import { selectedCatalogs, fetchCatalogs, deleteCatalog } from '../store/reducers'
 import { useDispatch, useSelector } from 'react-redux'
 import React, { useEffect, useState } from 'react'
+import { useHistory } from 'react-router-dom'
 
-
-function Home() {
+function Home () {
   const [error, setError] = useState('')
   const catalogs = useSelector(selectedCatalogs)
   const dispatch = useDispatch()
+  const history = useHistory()
 
   useEffect(() => {
     if (!catalogs.length) {
@@ -19,6 +20,10 @@ function Home() {
     dispatch(deleteCatalog(id))
   }
 
+  const handleUpdate = async (id) => {
+    history.push(`/catalog/${id}/update`)
+  }
+
   return (
     <Container>
       <Alert
@@ -28,7 +33,6 @@ function Home() {
         onClose={() => setError('')}
         dismissible
         > {error} </Alert>
-      <h1>Catalogs</h1>
       <a href="/catalog/create"><Button variant="primary">Create catalog</Button></a>
 
       <br/><br/>
@@ -50,14 +54,14 @@ function Home() {
             <td><a href={`/catalog/${catalog.id}`}>{catalog.name}</a></td>
             <td>{catalog.itemsCount}</td> 
             <td>{catalog.description}</td>
-            <td><Button variant="warning">Update</Button></td>
+            <td><Button variant="warning" onClick={() => handleUpdate(catalog.id)}>Update</Button></td>
             <td><Button variant="danger" onClick={() => handleDelete(catalog.id)}>Delete</Button></td>
           </tr>)}
         </tbody>
     </Table>}
     
     </Container>
-  );
+  )
 }
 
-export default Home;
+export default Home

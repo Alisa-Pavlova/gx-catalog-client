@@ -1,56 +1,91 @@
-import { Button, Container, Table } from 'react-bootstrap'
-import { selectedCatalogs, fetchCatalogs } from '../store/reducers/catalogs'
+import { Button, Container, Table, InputGroup, FormControl } from 'react-bootstrap'
+import { selectedCatalog, fetchCatalog, selectedItems, fetchItemsBySearch } from '../store/reducers'
 import { useDispatch, useSelector } from 'react-redux'
-import React, { useEffect } from 'react'
-import { useHistory, useParams } from 'react-router-dom'
-
+import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import api from '../utils/api'
+import { useHistory } from 'react-router-dom'
 
 function ItemPage() {
   const { id } = useParams()
-
-  const catalogs = useSelector(selectedCatalogs)
+  const catalog = useSelector(selectedCatalog)
+  const items = useSelector(selectedItems)
   const dispatch = useDispatch()
+  const [searchString, setSearchString] = useState('')
+  const history = useHistory()
 
   useEffect(() => {
-    if (!catalogs.length) {
-      dispatch(fetchCatalogs())
+    if (!catalog.name) {
+      dispatch(fetchCatalog(id))
     }
   }, [])
 
+  const handleDelete = async (itemId) => {
+    try {
+      await api.delete(`/api/v1/item/${itemId}`)
+      dispatch(fetchCatalog(id))
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const handleSearch = async () => {
+    dispatch(fetchItemsBySearch(id, searchString.trim()))
+  }
+
+  const handleUpdate = (itemId) => {
+    history.push(`/catalog/${id}/update/${itemId}`)
+  }
+
   return (
     <Container>
-      <h1>Items</h1>
+      <a href="/">
+        {'< '} To catalogs list
+      </a>
+      <br/><br/>
       <a href={`/catalog/${id}/create`}>
         <Button variant="primary">Create Item</Button>
       </a>
 
+      <h1>{catalog.name}</h1>
+
       <br/><br/>
 
-      {!catalogs.length && <>There is no catalogs, create one!</>}
+      <InputGroup className="mb-3">
+        <InputGroup.Text id="basic-addon3">
+          <Button variant="info" onClick={handleSearch}>Search</Button>
+        </InputGroup.Text>
+        <FormControl value={searchString} onChange={({ target: { value } }) => setSearchString(value)} />
+      </InputGroup>
 
-      {!!catalogs.length && <Table striped bordered hover>
+      {!items.length && <>There is no items, create one!</>}
+
+      {!!items.length && <Table striped bordered hover>
         <thead>
           <tr>
             <th>Name</th>
-            <th>Items Count</th>
             <th>Description</th>
+            <th>Brand</th>
+            <th>Model</th>
+            <th>Price</th>
             <th></th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-        {catalogs.map(catalog => <tr key={catalog.id}>
-            <td><a href={`/catalog/${catalog.id}`}>{catalog.name}</a></td>
-            <td>{catalog.itemsCount}</td> 
-            <td>{catalog.description}</td>
-            <td><Button variant="warning">Update</Button></td>
-            <td><Button variant="danger">Delete</Button></td>
+        {items.map(item => <tr key={item.id}>
+            <td>{item.name}</td>
+            <td>{item.description}</td>
+            <td>{item.brand}</td>
+            <td>{item.model}</td>
+            <td>{item.price}</td>
+            <td><Button variant="warning" onClick={() => handleUpdate(item.id)}>Update</Button></td>
+            <td><Button variant="danger" onClick={() => handleDelete(item.id)}>Delete</Button></td>
           </tr>)}
         </tbody>
-    </Table>}
-    
+      </Table>}
     </Container>
-  );
+  )
 }
 
 export default ItemPage;

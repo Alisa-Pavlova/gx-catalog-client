@@ -6,8 +6,11 @@ import {
 } from 'redux';
 
 import thunkMiddleware from './utils/thunk-middleware';
+import * as catalogs from './reducers'
 
-import { reducers } from './reducers';
+const reducers = {
+  [catalogs.storeKey]: catalogs.reducer,
+};
 
 const store = createStore(
   combineReducers(reducers),
@@ -16,3 +19,6 @@ const store = createStore(
 );
 
 export default store;
+
+
+
